@@ -8,5 +8,14 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library name="ffdec_4.1.1_lib">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/ffdec_4.1.1_lib.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
