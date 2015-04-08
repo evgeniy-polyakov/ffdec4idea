@@ -1,43 +1,46 @@
 <idea-plugin version="2">
-  <id>com.yourcompany.unique.plugin.id</id>
-  <name>Plugin display name here</name>
-  <version>1.0</version>
-  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+    <id>com.epolyakov.ffdec4idea</id>
+    <name>Flash Decompiler</name>
+    <version>1.0.0</version>
+    <vendor email="evgeniy.s.polyakov@gmail.com">Evgeniy Polyakov</vendor>
 
-  <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <em>most HTML tags may be used</em>
+    <description><![CDATA[
+      The plugin for IntelliJ platform that provides decompiling of AS3 binaries using <a href="https://github.com/jindrapetrik/jpexs-decompiler">Free Flash Decompiler</a>.
     ]]></description>
 
-  <change-notes><![CDATA[
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>
+    <change-notes><![CDATA[
+      <p>1.0.0</p>
     ]]>
-  </change-notes>
+    </change-notes>
 
-  <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="131"/>
+    <actions>
+        <action id="Decompile" class="com.epolyakov.ffdec4idea.actions.DecompileAction"
+                text="Decompile" description="Decompile AS3 definition.">
+            <add-to-group group-id="ProjectViewPopupMenu"/>
+        </action>
+    </actions>
 
-  <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
-       on how to target different products -->
-  <!-- uncomment to enable plugin in all products
-  <depends>com.intellij.modules.lang</depends>
-  -->
+    <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
+    <idea-version since-build="133.193" until-build="141.9999"/>
 
-  <extensions defaultExtensionNs="com.intellij">
-    <!-- Add your extensions here -->
-  </extensions>
+    <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+         on how to target different products -->
+    <depends>com.intellij.modules.lang</depends>
 
-  <application-components>
-    <!-- Add your application components here -->
-  </application-components>
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add your extensions here -->
+    </extensions>
 
-  <project-components>
-    <!-- Add your project components here -->
-  </project-components>
+    <application-components>
+        <!-- Add your application components here -->
+    </application-components>
 
-  <actions>
-    <!-- Add your actions here -->
-  </actions>
+    <project-components>
+        <!-- Add your project components here -->
+    </project-components>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
 
 </idea-plugin>
