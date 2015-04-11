@@ -14,7 +14,9 @@
           <root url="jar://$MODULE_DIR$/lib/ffdec_4.1.1_lib.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/lib/ffdec_4.1.1_lib" />
+        </SOURCES>
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="PROVIDED">
