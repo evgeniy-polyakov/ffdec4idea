@@ -199,6 +199,7 @@ public class DecompileAction extends AnAction {
      */
     private void openFileInEditor(File file, SWF swf, Project project) {
         if (file.exists()) {
+            // todo implement a vfs like ArchiveFileSystem and don't use physical files
             VirtualFile virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file);
             if (virtualFile != null) {
                 OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, virtualFile, 0);
