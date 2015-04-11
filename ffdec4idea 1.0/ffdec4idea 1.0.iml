@@ -20,7 +20,17 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="PROVIDED">
-      <library>
+      <library name="JavaScript">
+        <CLASSES>
+          <root url="jar://$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/lib/javascript-openapi.jar!/" />
+          <root url="jar://$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/lib/JavaScriptLanguage.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="PROVIDED">
+      <library name="FlexSupport">
         <CLASSES>
           <root url="jar://$APPLICATION_HOME_DIR$/plugins/flex/lib/FlexSupport.jar!/" />
         </CLASSES>
