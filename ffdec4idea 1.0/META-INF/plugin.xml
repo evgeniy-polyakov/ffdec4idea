@@ -28,6 +28,8 @@
     <depends>com.intellij.modules.lang</depends>
     <depends>com.intellij.flex</depends>
 
+    <resource-bundle>com.epolyakov.ffdec4idea.resources.ffdec4idea</resource-bundle>
+
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
     </extensions>

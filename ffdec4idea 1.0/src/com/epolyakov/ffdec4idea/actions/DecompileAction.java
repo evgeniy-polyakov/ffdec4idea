@@ -23,11 +23,14 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ResourceBundle;
 
 /**
  * @author epolyakov
  */
 public class DecompileAction extends AnAction {
+
+    private static ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
 
     @Override
     public void actionPerformed(AnActionEvent event) {
@@ -100,7 +103,7 @@ public class DecompileAction extends AnAction {
 
             // There is no document class. Show an appropriate message.
             if (definition == null || definition.isEmpty()) {
-                File file = ScriptExporter.export("// There is no document class in " + swfFile.getName() + ".", tempDirectory, "");
+                File file = ScriptExporter.export(resources.getString("no.document.class").replaceAll("%file", swfFile.getName()), tempDirectory, "");
                 openFileInEditor(file, swf, project);
                 continue;
             }
@@ -214,7 +217,7 @@ public class DecompileAction extends AnAction {
     private void addEditorNotificationPanel(Editor editor, SWF swf) {
         if (editor != null) {
             EditorNotificationPanel editorNotificationPanel = new EditorNotificationPanel();
-            editorNotificationPanel.setText("Decompiled by ffdec, swf version: " + swf.version);
+            editorNotificationPanel.setText(resources.getString("editor.notification").replaceAll("%version", Integer.toString(swf.version)));
             editor.setHeaderComponent(editorNotificationPanel);
         }
     }
