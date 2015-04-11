@@ -13,19 +13,13 @@
     ]]>
     </change-notes>
 
-    <actions>
-        <action id="Decompile" class="com.epolyakov.ffdec4idea.actions.DecompileAction"
-                text="Decompile" description="Decompile AS3 definition.">
-            <add-to-group group-id="ProjectViewPopupMenu"/>
-        </action>
-    </actions>
-
     <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
     <idea-version since-build="133.193" until-build="141.9999"/>
 
     <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
          on how to target different products -->
     <depends>com.intellij.modules.lang</depends>
+    <depends>JavaScript</depends>
     <depends>com.intellij.flex</depends>
 
     <resource-bundle>com.epolyakov.ffdec4idea.resources.ffdec4idea</resource-bundle>
@@ -43,7 +37,10 @@
     </project-components>
 
     <actions>
-        <!-- Add your actions here -->
+        <action id="Decompile" class="com.epolyakov.ffdec4idea.actions.DecompileAction"
+                text="Decompile" description="Decompile AS3 definition.">
+            <add-to-group group-id="ProjectViewPopupMenu"/>
+        </action>
     </actions>
 
 </idea-plugin>
