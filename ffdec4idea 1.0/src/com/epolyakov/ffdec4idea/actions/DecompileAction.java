@@ -98,26 +98,18 @@ public class DecompileAction extends AnAction {
                 definition = swf.getDocumentClass();
             }
 
+            // There is no document class. Show an appropriate message.
             if (definition == null || definition.isEmpty()) {
-                // todo show an appropriate message
+                File file = ScriptExporter.export("// There is no document class in " + swfFile.getName() + ".", tempDirectory, "");
+                openFileInEditor(file, swf, project);
                 continue;
             }
 
             for (MyEntry<ClassPath, ScriptPack> scriptPack : swf.getAS3Packs()) {
                 String classPath = scriptPack.getValue().getClassPath().toString();
                 if (definition.equals(classPath)) {
-                    File file = ScriptPackExporter.export(scriptPack.getValue(), tempDirectory);
-                    if (file.exists()) {
-                        VirtualFile virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file);
-                        if (virtualFile != null) {
-                            Editor editor = FileEditorManager.getInstance(project).openTextEditor(new OpenFileDescriptor(project, virtualFile, 0), true);
-                            if (editor != null) {
-                                EditorNotificationPanel editorNotificationPanel = new EditorNotificationPanel();
-                                editorNotificationPanel.setText("Decompiled by ffdec, swf version: " + swf.version);
-                                editor.setHeaderComponent(editorNotificationPanel);
-                            }
-                        }
-                    }
+                    File file = ScriptExporter.export(scriptPack.getValue(), tempDirectory);
+                    openFileInEditor(file, swf, project);
                     break;
                 }
             }
@@ -193,5 +185,37 @@ public class DecompileAction extends AnAction {
             }
         }
         return fileNameFound ? sb.toString() : "";
+    }
+
+    /**
+     * Opens the specified file in the editor window.
+     *
+     * @param file    The file.
+     * @param swf     The swf object.
+     * @param project The current project.
+     */
+    private void openFileInEditor(File file, SWF swf, Project project) {
+        if (file.exists()) {
+            VirtualFile virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file);
+            if (virtualFile != null) {
+                OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, virtualFile, 0);
+                Editor editor = FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
+                addEditorNotificationPanel(editor, swf);
+            }
+        }
+    }
+
+    /**
+     * Adds a notification panel at the top of the editor window.
+     *
+     * @param editor The editor.
+     * @param swf    The swf object.
+     */
+    private void addEditorNotificationPanel(Editor editor, SWF swf) {
+        if (editor != null) {
+            EditorNotificationPanel editorNotificationPanel = new EditorNotificationPanel();
+            editorNotificationPanel.setText("Decompiled by ffdec, swf version: " + swf.version);
+            editor.setHeaderComponent(editorNotificationPanel);
+        }
     }
 }
