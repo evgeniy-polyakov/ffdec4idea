@@ -23,6 +23,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
 /**
@@ -103,7 +104,7 @@ public class DecompileAction extends AnAction {
 
             // There is no document class. Show an appropriate message.
             if (definition == null || definition.isEmpty()) {
-                File file = ScriptExporter.export(resources.getString("no.document.class").replaceAll("%file", swfFile.getName()), tempDirectory, "");
+                File file = ScriptExporter.export(MessageFormat.format(resources.getString("no.document.class"), swfFile.getName()), tempDirectory, "");
                 openFileInEditor(file, swf, project);
                 continue;
             }
@@ -218,7 +219,7 @@ public class DecompileAction extends AnAction {
     private void addEditorNotificationPanel(Editor editor, SWF swf) {
         if (editor != null) {
             EditorNotificationPanel editorNotificationPanel = new EditorNotificationPanel();
-            editorNotificationPanel.setText(resources.getString("editor.notification").replaceAll("%version", Integer.toString(swf.version)));
+            editorNotificationPanel.setText(MessageFormat.format(resources.getString("editor.notification"), swf.version));
             editor.setHeaderComponent(editorNotificationPanel);
         }
     }
