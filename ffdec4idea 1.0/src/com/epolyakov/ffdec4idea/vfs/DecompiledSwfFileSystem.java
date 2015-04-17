@@ -5,6 +5,7 @@ import com.intellij.openapi.util.io.FileAttributes;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.newvfs.NewVirtualFileSystem;
 import com.intellij.openapi.vfs.newvfs.VfsImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +26,10 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
     public static final String SWF_SEPARATOR = "!/";
     private static ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
 
+    public static DecompiledSwfFileSystem getInstance() {
+        return (DecompiledSwfFileSystem) VirtualFileManager.getInstance().getFileSystem("swf");
+    }
+
     @Nullable
     @Override
     public VirtualFile findFileByPathIfCached(@NotNull String path) {
@@ -35,7 +40,7 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
     @Override
     protected String extractRootPath(@NotNull String path) {
         final int jarSeparatorIndex = path.indexOf(SWF_SEPARATOR);
-        assert jarSeparatorIndex >= 0 : "Path passed to DecompiledSwfFileSystem must have separator '!/': " + path;
+        assert jarSeparatorIndex >= 0 : MessageFormat.format(resources.getString("swf.incorrect.path.error"), path);
         return path.substring(0, jarSeparatorIndex + SWF_SEPARATOR.length());
     }
 
