@@ -30,18 +30,10 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
         return (DecompiledSwfFileSystem) VirtualFileManager.getInstance().getFileSystem("swf");
     }
 
-    @Nullable
-    @Override
-    public VirtualFile findFileByPathIfCached(@NotNull String path) {
-        return VfsImplUtil.findFileByPathIfCached(this, path);
-    }
-
     @NotNull
     @Override
-    protected String extractRootPath(@NotNull String path) {
-        final int jarSeparatorIndex = path.indexOf(SWF_SEPARATOR);
-        assert jarSeparatorIndex >= 0 : MessageFormat.format(resources.getString("swf.incorrect.path.error"), path);
-        return path.substring(0, jarSeparatorIndex + SWF_SEPARATOR.length());
+    public String getProtocol() {
+        return PROTOCOL;
     }
 
     @Override
@@ -49,11 +41,27 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
         return LocalFileSystem.getInstance().getRank() + 1;
     }
 
-    @NotNull
+    @Nullable
     @Override
-    public VirtualFile copyFile(Object requestor, @NotNull VirtualFile file, @NotNull VirtualFile newParent,
-                                @NotNull String copyName) throws IOException {
-        throw new IOException(MessageFormat.format(resources.getString("swf.modification.not.supported.error"), file.getUrl()));
+    public VirtualFile findFileByPath(@NotNull String path) {
+        return VfsImplUtil.findFileByPath(this, path);
+    }
+
+    @Nullable
+    @Override
+    public VirtualFile refreshAndFindFileByPath(@NotNull String path) {
+        return VfsImplUtil.refreshAndFindFileByPath(this, path);
+    }
+
+    @Nullable
+    @Override
+    public VirtualFile findFileByPathIfCached(@NotNull String path) {
+        return VfsImplUtil.findFileByPathIfCached(this, path);
+    }
+
+    @Override
+    public void refresh(boolean asynchronous) {
+        VfsImplUtil.refresh(this, asynchronous);
     }
 
     @NotNull
@@ -85,20 +93,26 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
         }
     }
 
+    @Nullable
+    @Override
+    public FileAttributes getAttributes(@NotNull VirtualFile file) {
+        return new FileAttributes(isDirectory(file), false, false, false, getLength(file), 0L, false);
+    }
+
     @Override
     public boolean exists(@NotNull VirtualFile file) {
         return getHandler(file).exists(getRelativePath(file));
+    }
+
+    @Override
+    public boolean isDirectory(@NotNull VirtualFile file) {
+        return getHandler(file).isDirectory(getRelativePath(file));
     }
 
     @NotNull
     @Override
     public String[] list(@NotNull VirtualFile file) {
         return getHandler(file).list(getRelativePath(file));
-    }
-
-    @Override
-    public boolean isDirectory(@NotNull VirtualFile file) {
-        return getHandler(file).isDirectory(getRelativePath(file));
     }
 
     @Override
@@ -121,6 +135,29 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
         throw new IOException(MessageFormat.format(resources.getString("swf.modification.not.supported.error"), file.getUrl()));
     }
 
+    @Override
+    public void deleteFile(Object requestor, @NotNull VirtualFile file) throws IOException {
+        throw new IOException(MessageFormat.format(resources.getString("swf.modification.not.supported.error"), file.getUrl()));
+    }
+
+    @NotNull
+    @Override
+    public VirtualFile copyFile(Object requestor, @NotNull VirtualFile file, @NotNull VirtualFile newParent,
+                                @NotNull String copyName) throws IOException {
+        throw new IOException(MessageFormat.format(resources.getString("swf.modification.not.supported.error"), file.getUrl()));
+    }
+
+    @Override
+    public void moveFile(Object o, @NotNull VirtualFile file, @NotNull VirtualFile newParent)
+            throws IOException {
+        throw new IOException(MessageFormat.format(resources.getString("swf.modification.not.supported.error"), file.getUrl()));
+    }
+
+    @Override
+    public void renameFile(Object o, @NotNull VirtualFile file, @NotNull String newName) throws IOException {
+        throw new IOException(MessageFormat.format(resources.getString("swf.modification.not.supported.error"), file.getUrl()));
+    }
+
     @NotNull
     @Override
     public VirtualFile createChildDirectory(Object requestor, @NotNull VirtualFile parent, @NotNull String dir)
@@ -136,51 +173,6 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
     }
 
     @NotNull
-    @Override
-    public String getProtocol() {
-        return PROTOCOL;
-    }
-
-    @Nullable
-    @Override
-    public VirtualFile findFileByPath(@NotNull String path) {
-        return VfsImplUtil.findFileByPath(this, path);
-    }
-
-    @Override
-    public void refresh(boolean asynchronous) {
-        VfsImplUtil.refresh(this, asynchronous);
-    }
-
-    @Nullable
-    @Override
-    public VirtualFile refreshAndFindFileByPath(@NotNull String path) {
-        return VfsImplUtil.refreshAndFindFileByPath(this, path);
-    }
-
-    @Override
-    public void deleteFile(Object requestor, @NotNull VirtualFile file) throws IOException {
-        throw new IOException(MessageFormat.format(resources.getString("swf.modification.not.supported.error"), file.getUrl()));
-    }
-
-    @Override
-    public void moveFile(Object o, @NotNull VirtualFile file, @NotNull VirtualFile newParent)
-            throws IOException {
-        throw new IOException(MessageFormat.format(resources.getString("swf.modification.not.supported.error"), file.getUrl()));
-    }
-
-    @Override
-    public void renameFile(Object o, @NotNull VirtualFile file, @NotNull String newName) throws IOException {
-        throw new IOException(MessageFormat.format(resources.getString("swf.modification.not.supported.error"), file.getUrl()));
-    }
-
-    @Nullable
-    @Override
-    public FileAttributes getAttributes(@NotNull VirtualFile file) {
-        return new FileAttributes(isDirectory(file), false, false, false, getLength(file), 0L, false);
-    }
-
-    @NotNull
     private SwfHandler getHandler(@NotNull VirtualFile file) {
         // todo add cache
         return new SwfHandler(file);
@@ -191,5 +183,13 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
         String path = file.getPath();
         String relativePath = path.substring(extractRootPath(path).length());
         return StringUtil.startsWithChar(relativePath, '/') ? relativePath.substring(1) : relativePath;
+    }
+
+    @NotNull
+    @Override
+    protected String extractRootPath(@NotNull String path) {
+        final int swfSeparatorIndex = path.indexOf(SWF_SEPARATOR);
+        assert swfSeparatorIndex >= 0 : MessageFormat.format(resources.getString("swf.incorrect.path.error"), path);
+        return path.substring(0, swfSeparatorIndex + SWF_SEPARATOR.length());
     }
 }
