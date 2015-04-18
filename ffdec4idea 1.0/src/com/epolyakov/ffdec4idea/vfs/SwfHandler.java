@@ -4,11 +4,11 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ArrayUtil;
 import com.jpexs.decompiler.flash.SWF;
 import com.jpexs.decompiler.flash.abc.ScriptPack;
+import com.jpexs.decompiler.flash.configuration.Configuration;
+import com.jpexs.decompiler.flash.exporters.modes.ScriptExportMode;
 import com.jpexs.decompiler.flash.helpers.collections.MyEntry;
-import com.jpexs.helpers.utf8.Utf8OutputStreamWriter;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -69,28 +69,21 @@ public class SwfHandler {
 
     @NotNull
     public byte[] contentsToByteArray(@NotNull String qName) throws IOException {
-
+        setScriptPacks();
+        @NotNull ScriptPack scriptPack = getScriptPackByQName(qName);
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-             BufferedWriter writer = new BufferedWriter(new Utf8OutputStreamWriter(outputStream))) {
-            writer.write("Hello");
+             DecompiledSwfTextWriter writer = new DecompiledSwfTextWriter(Configuration.getCodeFormatting(), outputStream)) {
+
+            // Magic code that writes the decompiled AS file to the stream.
+            scriptPack.toSource(writer,
+                                scriptPack.abc.script_info.get(scriptPack.scriptIndex).traits.traits,
+                                ScriptExportMode.AS, false);
             writer.flush();
             return outputStream.toByteArray();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return new byte[0];
         }
-
-//        ScriptPack scriptPack = getScriptPackByQName(qName);
-//        if (scriptPack == null) {
-//            return new byte[0];
-//        }
-//        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//             DecompiledSwfTextWriter writer = new DecompiledSwfTextWriter(Configuration.getCodeFormatting(), outputStream)) {
-//            scriptPack.toSource(writer,
-//                                scriptPack.abc.script_info.get(scriptPack.scriptIndex).traits.traits,
-//                                ScriptExportMode.AS, false);
-//            return outputStream.toByteArray();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//            return new byte[0];
-//        }
     }
 
     private ScriptPack getScriptPackByQName(@NotNull String qName) {

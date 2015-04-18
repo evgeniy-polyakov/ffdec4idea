@@ -120,4 +120,8 @@ public class DecompiledSwfTextWriter extends GraphTextWriter implements AutoClos
     public void close() throws IOException {
         writer.close();
     }
+
+    public void flush() throws IOException {
+        writer.flush();
+    }
 }
