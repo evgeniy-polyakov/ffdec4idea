@@ -1,13 +1,11 @@
 package com.epolyakov.ffdec4idea.vfs;
 
-import com.intellij.openapi.util.io.BufferExposingByteArrayInputStream;
+import com.intellij.openapi.util.Couple;
 import com.intellij.openapi.util.io.FileAttributes;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.newvfs.NewVirtualFileSystem;
-import com.intellij.openapi.vfs.newvfs.VfsImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,7 +21,7 @@ import java.util.ResourceBundle;
 public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
 
     public static final String PROTOCOL = "swf";
-    public static final String SWF_SEPARATOR = "!/";
+    public static final String PATH_SEPARATOR = "!/";
     private static ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
 
     public static DecompiledSwfFileSystem getInstance() {
@@ -44,36 +42,41 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
     @Nullable
     @Override
     public VirtualFile findFileByPath(@NotNull String path) {
-        return VfsImplUtil.findFileByPath(this, path);
+        Couple<String> couple = splitPath(path);
+        VirtualFile file = LocalFileSystem.getInstance().findFileByPath(couple.first);
+        return getDecompiledFile(file, couple.second);
     }
 
     @Nullable
     @Override
     public VirtualFile refreshAndFindFileByPath(@NotNull String path) {
-        return VfsImplUtil.refreshAndFindFileByPath(this, path);
+        Couple<String> couple = splitPath(path);
+        VirtualFile file = LocalFileSystem.getInstance().refreshAndFindFileByPath(couple.first);
+        return getDecompiledFile(file, couple.second);
     }
 
     @Nullable
     @Override
     public VirtualFile findFileByPathIfCached(@NotNull String path) {
-        return VfsImplUtil.findFileByPathIfCached(this, path);
+        Couple<String> couple = splitPath(path);
+        VirtualFile file = LocalFileSystem.getInstance().findFileByPathIfCached(couple.first);
+        return getDecompiledFile(file, couple.second);
     }
 
     @Override
     public void refresh(boolean asynchronous) {
-        VfsImplUtil.refresh(this, asynchronous);
     }
 
     @NotNull
     @Override
     public byte[] contentsToByteArray(@NotNull VirtualFile file) throws IOException {
-        return getHandler(file).contentsToByteArray(getRelativePath(file));
+        return file.contentsToByteArray();
     }
 
     @NotNull
     @Override
     public InputStream getInputStream(@NotNull VirtualFile file) throws IOException {
-        return new BufferExposingByteArrayInputStream(contentsToByteArray(file));
+        return file.getInputStream();
     }
 
     @NotNull
@@ -85,34 +88,32 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
 
     @Override
     public long getLength(@NotNull VirtualFile file) {
-        try {
-            return contentsToByteArray(file).length;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return 0L;
-        }
+        return file.getLength();
     }
 
     @Nullable
     @Override
     public FileAttributes getAttributes(@NotNull VirtualFile file) {
-        return new FileAttributes(isDirectory(file), false, false, false, getLength(file), 0L, false);
+        return new FileAttributes(file.isDirectory(), false, false, false, file.getLength(), 0L, false);
     }
 
     @Override
     public boolean exists(@NotNull VirtualFile file) {
-        return getHandler(file).exists(getRelativePath(file));
+        return file.exists();
     }
 
     @Override
     public boolean isDirectory(@NotNull VirtualFile file) {
-        return getHandler(file).isDirectory(getRelativePath(file));
+        return file.isDirectory();
     }
 
     @NotNull
     @Override
     public String[] list(@NotNull VirtualFile file) {
-        return getHandler(file).list(getRelativePath(file));
+        if (file instanceof DecompiledSwfFile) {
+            return ((DecompiledSwfFile) file).getChildrenNames();
+        }
+        return new String[0];
     }
 
     @Override
@@ -174,22 +175,35 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
 
     @NotNull
     private SwfHandler getHandler(@NotNull VirtualFile file) {
-        // todo add cache
+        // todo cache
         return new SwfHandler(file);
-    }
-
-    @NotNull
-    protected String getRelativePath(@NotNull VirtualFile file) {
-        String path = file.getPath();
-        String relativePath = path.substring(extractRootPath(path).length());
-        return StringUtil.startsWithChar(relativePath, '/') ? relativePath.substring(1) : relativePath;
     }
 
     @NotNull
     @Override
     protected String extractRootPath(@NotNull String path) {
-        final int swfSeparatorIndex = path.indexOf(SWF_SEPARATOR);
-        assert swfSeparatorIndex >= 0 : MessageFormat.format(resources.getString("swf.incorrect.path.error"), path);
-        return path.substring(0, swfSeparatorIndex + SWF_SEPARATOR.length());
+        final int index = path.indexOf(PATH_SEPARATOR);
+        assert index >= 0 : MessageFormat.format(resources.getString("swf.incorrect.path.error"), path);
+        return path.substring(0, index + PATH_SEPARATOR.length());
+    }
+
+    @NotNull
+    protected Couple<String> splitPath(@NotNull String path) {
+        final int index = path.indexOf(PATH_SEPARATOR);
+        assert index >= 0 : MessageFormat.format(resources.getString("swf.incorrect.path.error"), path);
+        return Couple.of(path.substring(0, index), path.substring(index + PATH_SEPARATOR.length()));
+    }
+
+    protected VirtualFile getDecompiledFile(VirtualFile swfFile, @NotNull String relativePath) {
+        if (swfFile == null) {
+            return null;
+        }
+        SwfHandler handler = getHandler(swfFile);
+        String[] names = relativePath.split("/");
+        VirtualFile file = swfFile;
+        for (String name : names) {
+            file = new DecompiledSwfFile(handler, name, file);
+        }
+        return file;
     }
 }
