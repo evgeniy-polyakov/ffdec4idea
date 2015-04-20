@@ -95,7 +95,7 @@ public class DecompiledSwfFile extends VirtualFile {
         String[] names = getChildrenNames();
         VirtualFile[] files = new VirtualFile[names.length];
         for (int i = 0; i < names.length; i++) {
-            files[i] = new DecompiledSwfFile(handler, names[i], this);
+            files[i] = DecompiledSwfFileSystem.getInstance().getDecompiledFile(handler, names[i], this);
         }
         return files;
     }
