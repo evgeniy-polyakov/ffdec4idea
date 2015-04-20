@@ -25,7 +25,7 @@ import java.util.ResourceBundle;
  */
 public class DecompileAction extends AnAction {
 
-    private static ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
+    private static final ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
 
     @Override
     public void actionPerformed(AnActionEvent event) {

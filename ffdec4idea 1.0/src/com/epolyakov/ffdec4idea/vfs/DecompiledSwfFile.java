@@ -18,7 +18,7 @@ import java.util.ResourceBundle;
  */
 public class DecompiledSwfFile extends VirtualFile {
 
-    private static ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
+    private static final ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
 
     private SwfHandler handler;
     private VirtualFile parent;
