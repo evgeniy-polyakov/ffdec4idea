@@ -1,5 +1,6 @@
 package com.epolyakov.ffdec4idea.actions;
 
+import com.epolyakov.ffdec4idea.vfs.DecompiledSwfFileSystem;
 import com.intellij.ide.projectView.impl.ProjectViewTree;
 import com.intellij.javascript.flex.FlexApplicationComponent;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -9,20 +10,13 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorNotificationPanel;
 import com.jpexs.decompiler.flash.SWF;
-import com.jpexs.decompiler.flash.abc.ClassPath;
-import com.jpexs.decompiler.flash.abc.ScriptPack;
-import com.jpexs.decompiler.flash.helpers.collections.MyEntry;
 
 import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
@@ -70,7 +64,7 @@ public class DecompileAction extends AnAction {
             if (selectionPaths != null) {
                 String[] definitions = new String[selectionPaths.length];
                 for (int i = 0; i < selectionPaths.length; i++) {
-                    definitions[i] = getDefinitionQualifiedName(selectionPaths[i], swfFile.getName());
+                    definitions[i] = getDefinitionPath(selectionPaths[i], swfFile.getName());
                 }
                 return definitions;
             }
@@ -90,9 +84,7 @@ public class DecompileAction extends AnAction {
     private void openDefinitions(String[] definitions, VirtualFile swfFile, Project project)
             throws IOException, InterruptedException {
 
-        InputStream stream = swfFile.getInputStream();
-        SWF swf = new SWF(stream, false);
-        String tempDirectory = getSwfFileTempDirectory(project, swfFile);
+        SWF swf = DecompiledSwfFileSystem.getInstance().getSwf(swfFile);
 
         for (String definition : definitions) {
 
@@ -100,22 +92,23 @@ public class DecompileAction extends AnAction {
             // Try to get a document class in this case.
             if (definition == null || definition.isEmpty()) {
                 definition = swf.getDocumentClass();
+                if (definition != null) {
+                    definition = definition.replace('.', '/');
+                }
             }
 
             // There is no document class. Show an appropriate message.
             if (definition == null || definition.isEmpty()) {
-                File file = ScriptExporter.export(MessageFormat.format(resources.getString("no.document.class"), swfFile.getName()), tempDirectory, "");
-                openFileInEditor(file, swf, project);
+                // todo
                 continue;
             }
 
-            for (MyEntry<ClassPath, ScriptPack> scriptPack : swf.getAS3Packs()) {
-                String classPath = scriptPack.getValue().getClassPath().toString();
-                if (definition.equals(classPath)) {
-                    File file = ScriptExporter.export(scriptPack.getValue(), tempDirectory);
-                    openFileInEditor(file, swf, project);
-                    break;
-                }
+            String path = swfFile.getPath() + DecompiledSwfFileSystem.PATH_SEPARATOR + definition;
+            VirtualFile file = DecompiledSwfFileSystem.getInstance().findFileByPath(path);
+
+            if (file != null) {
+                OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, file, 0);
+                FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
             }
         }
     }
@@ -131,47 +124,13 @@ public class DecompileAction extends AnAction {
     }
 
     /**
-     * Constructs a temp directory for the given swf file to put decompiled sources in.
-     *
-     * @param project The current project.
-     * @param file    The selected swf file.
-     * @return The path like "userTempDirectory/ffdec4idea/projectName/pathToSwf"
-     */
-    private String getSwfFileTempDirectory(Project project, VirtualFile file) {
-
-        StringBuilder sb = new StringBuilder(FileUtil.getTempDirectory());
-        sb.append(File.separatorChar);
-        sb.append("ffdec4idea");
-        sb.append(File.separatorChar);
-        sb.append(project.getBaseDir().getName());
-
-        String projectUrl = project.getBaseDir().getUrl();
-        String fileUrl = file.getUrl();
-
-        if (fileUrl.startsWith(projectUrl) && fileUrl.length() > projectUrl.length()) {
-            // Use the relative path in project if the file is in the project directory
-            String filePath = fileUrl.substring(projectUrl.length());
-            if (filePath.charAt(0) != '/') {
-                sb.append(File.separatorChar);
-            }
-            sb.append(filePath);
-        } else {
-            // Use the file name if the file is out of the project directory
-            sb.append(File.separatorChar);
-            sb.append(file.getName());
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * Gets the qualified name of AS3 definition in the swf file.
+     * Gets the path to AS3 definition in the swf file.
      *
      * @param treePath The path to the selected node in the project view component.
      * @param fileName The name of the swf file which should be an ancestor node.
-     * @return The definition string like "com.mypackage.MyClass".
+     * @return The definition string like "com/mypackage/MyClass".
      */
-    private String getDefinitionQualifiedName(TreePath treePath, String fileName) {
+    private String getDefinitionPath(TreePath treePath, String fileName) {
 
         StringBuilder sb = new StringBuilder();
         Object[] path = treePath.getPath();
@@ -183,31 +142,12 @@ public class DecompileAction extends AnAction {
                 break;
             } else {
                 if (sb.length() > 0) {
-                    sb.insert(0, '.');
+                    sb.insert(0, '/');
                 }
                 sb.insert(0, path[i].toString());
             }
         }
         return fileNameFound ? sb.toString() : "";
-    }
-
-    /**
-     * Opens the specified file in the editor window.
-     *
-     * @param file    The file.
-     * @param swf     The swf object.
-     * @param project The current project.
-     */
-    private void openFileInEditor(File file, SWF swf, Project project) {
-        if (file.exists()) {
-            // todo implement a vfs like ArchiveFileSystem and don't use physical files
-            VirtualFile virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file);
-            if (virtualFile != null) {
-                OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, virtualFile, 0);
-                Editor editor = FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
-                addEditorNotificationPanel(editor, swf);
-            }
-        }
     }
 
     /**

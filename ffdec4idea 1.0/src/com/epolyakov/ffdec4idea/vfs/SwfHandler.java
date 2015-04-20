@@ -30,6 +30,10 @@ public class SwfHandler {
         }
     }
 
+    public SWF getSwf() {
+        return swf;
+    }
+
     public boolean isPackage(@NotNull String qName) {
         setScriptPacks();
         String packageName = qName + ".";

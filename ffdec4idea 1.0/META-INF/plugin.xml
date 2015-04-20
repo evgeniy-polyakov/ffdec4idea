@@ -25,7 +25,7 @@
     <resource-bundle>com.epolyakov.ffdec4idea.resources.ffdec4idea</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Add your extensions here -->
+        <virtualFileSystem key="swf" id="swf" implementationClass="com.epolyakov.ffdec4idea.vfs.DecompiledSwfFileSystem"/>
     </extensions>
 
     <application-components>

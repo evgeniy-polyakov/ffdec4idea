@@ -6,6 +6,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.newvfs.NewVirtualFileSystem;
+import com.jpexs.decompiler.flash.SWF;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -171,6 +172,11 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
     public VirtualFile createChildFile(Object requestor, @NotNull VirtualFile parent, @NotNull String dir)
             throws IOException {
         throw new IOException(MessageFormat.format(resources.getString("swf.modification.not.supported.error"), parent.getUrl()));
+    }
+
+    @NotNull
+    public SWF getSwf(@NotNull VirtualFile file) {
+        return getHandler(file).getSwf();
     }
 
     @NotNull
