@@ -14,7 +14,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author epolyakov
@@ -23,7 +26,8 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
 
     public static final String PROTOCOL = "swf";
     public static final String PATH_SEPARATOR = "!/";
-    private static ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
+    private static final ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
+    private static final Map<String, SwfHandler> handlers = new HashMap<>();
 
     public static DecompiledSwfFileSystem getInstance() {
         return (DecompiledSwfFileSystem) VirtualFileManager.getInstance().getFileSystem("swf");
@@ -66,6 +70,9 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
 
     @Override
     public void refresh(boolean asynchronous) {
+        synchronized (handlers) {
+            handlers.clear();
+        }
     }
 
     @NotNull
@@ -181,8 +188,13 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
 
     @NotNull
     private SwfHandler getHandler(@NotNull VirtualFile file) {
-        // todo cache
-        return new SwfHandler(file);
+        synchronized (handlers) {
+            String path = file.getPath();
+            if (!handlers.containsKey(path)) {
+                handlers.put(path, new SwfHandler(file));
+            }
+            return handlers.get(path);
+        }
     }
 
     @NotNull
