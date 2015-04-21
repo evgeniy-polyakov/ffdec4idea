@@ -27,7 +27,7 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
     public static final String PATH_SEPARATOR = "!/";
     private static final ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
     private static final Map<String, SwfHandler> handlers = new HashMap<>();
-    private static final Map<String, VirtualFile> files = new HashMap<>();
+    private static final Map<String, DecompiledSwfFile> files = new HashMap<>();
 
     public static DecompiledSwfFileSystem getInstance() {
         return (DecompiledSwfFileSystem) VirtualFileManager.getInstance().getFileSystem("swf");
@@ -53,11 +53,7 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
             }
             Couple<String> couple = splitPath(path);
             VirtualFile swfFile = LocalFileSystem.getInstance().findFileByPath(couple.first);
-            VirtualFile file = getDecompiledFile(swfFile, couple.second);
-            if (file != null) {
-                files.put(file.getPath(), file);
-            }
-            return file;
+            return getDecompiledFile(swfFile, couple.second);
         }
     }
 
@@ -68,11 +64,7 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
             files.clear();
             Couple<String> couple = splitPath(path);
             VirtualFile swfFile = LocalFileSystem.getInstance().refreshAndFindFileByPath(couple.first);
-            VirtualFile file = getDecompiledFile(swfFile, couple.second);
-            if (file != null) {
-                files.put(file.getPath(), file);
-            }
-            return file;
+            return getDecompiledFile(swfFile, couple.second);
         }
     }
 
@@ -235,13 +227,13 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
     }
 
     @Nullable
-    private VirtualFile getDecompiledFile(VirtualFile swfFile, @NotNull String relativePath) {
+    private DecompiledSwfFile getDecompiledFile(VirtualFile swfFile, @NotNull String relativePath) {
         if (swfFile == null) {
             return null;
         }
         SwfHandler handler = getHandler(swfFile);
         String[] names = relativePath.split("/");
-        VirtualFile file = swfFile;
+        DecompiledSwfFile file = getDecompiledFile(handler, swfFile);
         for (String name : names) {
             file = getDecompiledFile(handler, name, file);
         }
@@ -249,18 +241,29 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
     }
 
     @NotNull
-    protected VirtualFile getDecompiledFile(@NotNull SwfHandler handler, @NotNull String name,
-                                            @NotNull VirtualFile parent) {
-        String path = parent.getPath() + (parent instanceof DecompiledSwfFile ? '/' : PATH_SEPARATOR) + name;
-        VirtualFile file;
+    private DecompiledSwfFile getDecompiledFile(@NotNull SwfHandler handler, @NotNull VirtualFile parent) {
+        synchronized (files) {
+            String path = parent.getPath();
+            if (files.containsKey(path)) {
+                return files.get(path);
+            }
+            DecompiledSwfFile file = new DecompiledSwfFile(handler, parent);
+            files.put(path, file);
+            return file;
+        }
+    }
+
+    @NotNull
+    protected DecompiledSwfFile getDecompiledFile(@NotNull SwfHandler handler, @NotNull String name,
+                                                  @NotNull DecompiledSwfFile parent) {
+        String path = parent.getPath() + '/' + name;
         synchronized (files) {
             if (files.containsKey(path)) {
-                file = files.get(path);
-            } else {
-                file = new DecompiledSwfFile(handler, name, parent);
-                files.put(path, file);
+                return files.get(path);
             }
+            DecompiledSwfFile file = new DecompiledSwfFile(handler, name, parent);
+            files.put(path, file);
+            return file;
         }
-        return file;
     }
 }

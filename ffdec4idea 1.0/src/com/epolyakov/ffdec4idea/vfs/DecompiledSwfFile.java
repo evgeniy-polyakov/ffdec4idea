@@ -23,11 +23,33 @@ public class DecompiledSwfFile extends VirtualFile {
     private SwfHandler handler;
     private VirtualFile parent;
     private String name;
+    private boolean isRoot;
 
-    public DecompiledSwfFile(@NotNull SwfHandler handler, @NotNull String name, @NotNull VirtualFile parent) {
+    /**
+     * Constructs the root file with the name of the swf file.
+     *
+     * @param handler
+     * @param swfFile
+     */
+    public DecompiledSwfFile(@NotNull SwfHandler handler, @NotNull VirtualFile swfFile) {
+        this.handler = handler;
+        this.parent = swfFile;
+        this.name = swfFile.getName();
+        this.isRoot = true;
+    }
+
+    /**
+     * Constructs a package or a class file within the swf.
+     *
+     * @param handler
+     * @param name
+     * @param parent
+     */
+    public DecompiledSwfFile(@NotNull SwfHandler handler, @NotNull String name, @NotNull DecompiledSwfFile parent) {
         this.handler = handler;
         this.name = name;
         this.parent = parent;
+        this.isRoot = false;
     }
 
     @NotNull
@@ -51,18 +73,24 @@ public class DecompiledSwfFile extends VirtualFile {
     @NotNull
     @Override
     public String getPath() {
-        if (parent instanceof DecompiledSwfFile) {
-            String path = parent.getPath();
-            return path.endsWith("/") ? path + name : path + '/' + name;
+        if (isRoot) {
+            return parent.getPath();
         }
-        return parent.getPath() + DecompiledSwfFileSystem.PATH_SEPARATOR + name;
+        String path = parent.getPath();
+        if (((DecompiledSwfFile) parent).isRoot()) {
+            return path + DecompiledSwfFileSystem.PATH_SEPARATOR + name;
+        }
+        return path + '/' + name;
     }
 
     @NotNull
     public String getQualifiedName() {
+        if (isRoot) {
+            return "";
+        }
         StringBuilder qName = new StringBuilder(name);
         VirtualFile p = parent;
-        while (p instanceof DecompiledSwfFile) {
+        while (!((DecompiledSwfFile) p).isRoot()) {
             qName.insert(0, '.');
             qName.insert(0, p.getName());
             p = p.getParent();
@@ -75,14 +103,18 @@ public class DecompiledSwfFile extends VirtualFile {
         return false;
     }
 
+    public boolean isRoot() {
+        return isRoot;
+    }
+
     @Override
     public boolean isDirectory() {
-        return handler.isPackage(getQualifiedName());
+        return isRoot || handler.isPackage(getQualifiedName());
     }
 
     @Override
     public boolean isValid() {
-        return handler.isPackageOrClass(getQualifiedName());
+        return isRoot ? parent.isValid() : handler.isPackageOrClass(getQualifiedName());
     }
 
     @Override
@@ -102,7 +134,7 @@ public class DecompiledSwfFile extends VirtualFile {
 
     @NotNull
     public String[] getChildrenNames() {
-        return handler.getPackageContents(getQualifiedName());
+        return isRoot ? handler.getRootContents() : handler.getPackageContents(getQualifiedName());
     }
 
     @NotNull

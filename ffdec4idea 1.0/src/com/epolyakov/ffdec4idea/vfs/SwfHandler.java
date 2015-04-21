@@ -50,6 +50,19 @@ public class SwfHandler {
                 .anyMatch(s -> s.equals(qName) || s.startsWith(packageName));
     }
 
+    public String[] getRootContents() {
+        setScriptPacks();
+        List<String> names = scriptPacks.stream()
+                .map(s -> s.getClassPath().toString())
+                .collect(Collectors.toList());
+        names.replaceAll(s -> {
+            int i = s.indexOf('.');
+            return i >= 0 ? s.substring(0, i) : s;
+        });
+        names = names.stream().distinct().collect(Collectors.toList());
+        return ArrayUtil.toStringArray(names);
+    }
+
     public String[] getPackageContents(@NotNull String qName) {
         setScriptPacks();
         String packageName = qName + ".";
@@ -74,7 +87,10 @@ public class SwfHandler {
     @NotNull
     public byte[] contentsToByteArray(@NotNull String qName) throws IOException {
         setScriptPacks();
-        @NotNull ScriptPack scriptPack = getScriptPackByQName(qName);
+        ScriptPack scriptPack = getScriptPackByQName(qName);
+        if (scriptPack == null) {
+            return new byte[0];
+        }
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
              DecompiledSwfTextWriter writer = new DecompiledSwfTextWriter(Configuration.getCodeFormatting(), outputStream)) {
 
