@@ -2,9 +2,7 @@ package com.epolyakov.ffdec4idea.vfs;
 
 import com.intellij.openapi.util.Couple;
 import com.intellij.openapi.util.io.FileAttributes;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.vfs.*;
 import com.intellij.openapi.vfs.newvfs.NewVirtualFileSystem;
 import com.jpexs.decompiler.flash.SWF;
 import org.jetbrains.annotations.NotNull;
@@ -17,6 +15,7 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 /**
  * @author epolyakov
@@ -26,8 +25,11 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
     public static final String PROTOCOL = "swf";
     public static final String PATH_SEPARATOR = "!/";
     private static final ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
-    private static final Map<String, SwfHandler> handlers = new HashMap<>();
-    private static final Map<String, DecompiledSwfFile> files = new HashMap<>();
+
+    private final Map<String, SwfHandler> handlers = new HashMap<>();
+    private final Map<String, DecompiledSwfFile> files = new HashMap<>();
+
+    private boolean isFileListenerSet;
 
     public static DecompiledSwfFileSystem getInstance() {
         return (DecompiledSwfFileSystem) VirtualFileManager.getInstance().getFileSystem("swf");
@@ -86,6 +88,22 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
         }
         synchronized (files) {
             files.clear();
+        }
+    }
+
+    public void refresh(@NotNull VirtualFile file) {
+        synchronized (handlers) {
+            String path = file.getPath();
+            if (handlers.containsKey(path)) {
+                handlers.remove(path);
+
+                synchronized (files) {
+                    files.keySet().stream()
+                            .filter(key -> key.startsWith(path))
+                            .collect(Collectors.toList())
+                            .forEach(files::remove);
+                }
+            }
         }
     }
 
@@ -202,6 +220,7 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
 
     @NotNull
     private SwfHandler getHandler(@NotNull VirtualFile file) {
+        setFileListener();
         synchronized (handlers) {
             String path = file.getPath();
             if (!handlers.containsKey(path)) {
@@ -264,6 +283,56 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
             DecompiledSwfFile file = new DecompiledSwfFile(handler, name, parent);
             files.put(path, file);
             return file;
+        }
+    }
+
+    private void setFileListener() {
+        if (!isFileListenerSet) {
+            VirtualFileManager.getInstance().addVirtualFileListener(new VirtualFileListener() {
+                @Override
+                public void propertyChanged(@NotNull VirtualFilePropertyEvent virtualFilePropertyEvent) {
+                }
+
+                @Override
+                public void contentsChanged(@NotNull VirtualFileEvent virtualFileEvent) {
+                    refresh(virtualFileEvent.getFile());
+                }
+
+                @Override
+                public void fileCreated(@NotNull VirtualFileEvent virtualFileEvent) {
+                }
+
+                @Override
+                public void fileDeleted(@NotNull VirtualFileEvent virtualFileEvent) {
+                    refresh(virtualFileEvent.getFile());
+                }
+
+                @Override
+                public void fileMoved(@NotNull VirtualFileMoveEvent virtualFileMoveEvent) {
+                    refresh(virtualFileMoveEvent.getFile());
+                }
+
+                @Override
+                public void fileCopied(@NotNull VirtualFileCopyEvent virtualFileCopyEvent) {
+                }
+
+                @Override
+                public void beforePropertyChange(@NotNull VirtualFilePropertyEvent virtualFilePropertyEvent) {
+                }
+
+                @Override
+                public void beforeContentsChange(@NotNull VirtualFileEvent virtualFileEvent) {
+                }
+
+                @Override
+                public void beforeFileDeletion(@NotNull VirtualFileEvent virtualFileEvent) {
+                }
+
+                @Override
+                public void beforeFileMovement(@NotNull VirtualFileMoveEvent virtualFileMoveEvent) {
+                }
+            });
+            isFileListenerSet = true;
         }
     }
 }
