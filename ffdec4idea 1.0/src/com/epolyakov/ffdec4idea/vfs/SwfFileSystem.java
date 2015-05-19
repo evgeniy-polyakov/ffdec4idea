@@ -20,19 +20,19 @@ import java.util.stream.Collectors;
 /**
  * @author epolyakov
  */
-public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
+public class SwfFileSystem extends NewVirtualFileSystem {
 
     public static final String PROTOCOL = "swf";
     public static final String PATH_SEPARATOR = "!/";
     private static final ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
 
     private final Map<String, SwfHandler> handlers = new HashMap<>();
-    private final Map<String, DecompiledSwfFile> files = new HashMap<>();
+    private final Map<String, DecompiledActionScriptFile> files = new HashMap<>();
 
     private boolean isFileListenerSet;
 
-    public static DecompiledSwfFileSystem getInstance() {
-        return (DecompiledSwfFileSystem) VirtualFileManager.getInstance().getFileSystem("swf");
+    public static SwfFileSystem getInstance() {
+        return (SwfFileSystem) VirtualFileManager.getInstance().getFileSystem("swf");
     }
 
     @NotNull
@@ -150,8 +150,8 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
     @NotNull
     @Override
     public String[] list(@NotNull VirtualFile file) {
-        if (file instanceof DecompiledSwfFile) {
-            return ((DecompiledSwfFile) file).getChildrenNames();
+        if (file instanceof DecompiledActionScriptFile) {
+            return ((DecompiledActionScriptFile) file).getChildrenNames();
         }
         return new String[0];
     }
@@ -246,13 +246,13 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
     }
 
     @Nullable
-    private DecompiledSwfFile getDecompiledFile(VirtualFile swfFile, @NotNull String relativePath) {
+    private DecompiledActionScriptFile getDecompiledFile(VirtualFile swfFile, @NotNull String relativePath) {
         if (swfFile == null) {
             return null;
         }
         SwfHandler handler = getHandler(swfFile);
         String[] names = relativePath.split("/");
-        DecompiledSwfFile file = getDecompiledFile(handler, swfFile);
+        DecompiledActionScriptFile file = getDecompiledFile(handler, swfFile);
         for (String name : names) {
             file = getDecompiledFile(handler, name, file);
         }
@@ -260,27 +260,27 @@ public class DecompiledSwfFileSystem extends NewVirtualFileSystem {
     }
 
     @NotNull
-    private DecompiledSwfFile getDecompiledFile(@NotNull SwfHandler handler, @NotNull VirtualFile parent) {
+    private DecompiledActionScriptFile getDecompiledFile(@NotNull SwfHandler handler, @NotNull VirtualFile parent) {
         synchronized (files) {
             String path = parent.getPath();
             if (files.containsKey(path)) {
                 return files.get(path);
             }
-            DecompiledSwfFile file = new DecompiledSwfFile(handler, parent);
+            DecompiledActionScriptFile file = new DecompiledActionScriptFile(handler, parent);
             files.put(path, file);
             return file;
         }
     }
 
     @NotNull
-    protected DecompiledSwfFile getDecompiledFile(@NotNull SwfHandler handler, @NotNull String name,
-                                                  @NotNull DecompiledSwfFile parent) {
+    protected DecompiledActionScriptFile getDecompiledFile(@NotNull SwfHandler handler, @NotNull String name,
+                                                           @NotNull DecompiledActionScriptFile parent) {
         String path = parent.getPath() + '/' + name;
         synchronized (files) {
             if (files.containsKey(path)) {
                 return files.get(path);
             }
-            DecompiledSwfFile file = new DecompiledSwfFile(handler, name, parent);
+            DecompiledActionScriptFile file = new DecompiledActionScriptFile(handler, name, parent);
             files.put(path, file);
             return file;
         }

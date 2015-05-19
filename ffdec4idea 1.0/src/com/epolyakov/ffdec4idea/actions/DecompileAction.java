@@ -1,6 +1,6 @@
 package com.epolyakov.ffdec4idea.actions;
 
-import com.epolyakov.ffdec4idea.vfs.DecompiledSwfFileSystem;
+import com.epolyakov.ffdec4idea.vfs.SwfFileSystem;
 import com.intellij.ide.projectView.impl.ProjectViewTree;
 import com.intellij.javascript.flex.FlexApplicationComponent;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -84,7 +84,7 @@ public class DecompileAction extends AnAction {
     private void openDefinitions(String[] definitions, VirtualFile swfFile, Project project)
             throws IOException, InterruptedException {
 
-        SWF swf = DecompiledSwfFileSystem.getInstance().getSwf(swfFile);
+        SWF swf = SwfFileSystem.getInstance().getSwf(swfFile);
 
         for (String definition : definitions) {
 
@@ -103,8 +103,8 @@ public class DecompileAction extends AnAction {
                 continue;
             }
 
-            String path = swfFile.getPath() + DecompiledSwfFileSystem.PATH_SEPARATOR + definition;
-            VirtualFile file = DecompiledSwfFileSystem.getInstance().findFileByPath(path);
+            String path = swfFile.getPath() + SwfFileSystem.PATH_SEPARATOR + definition;
+            VirtualFile file = SwfFileSystem.getInstance().findFileByPath(path);
 
             if (file != null) {
                 OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, file, 0);

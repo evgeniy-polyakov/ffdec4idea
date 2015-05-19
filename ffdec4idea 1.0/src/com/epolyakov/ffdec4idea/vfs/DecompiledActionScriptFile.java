@@ -1,6 +1,5 @@
 package com.epolyakov.ffdec4idea.vfs;
 
-import com.intellij.lang.javascript.ActionScriptFileType;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.io.BufferExposingByteArrayInputStream;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -16,7 +15,7 @@ import java.util.ResourceBundle;
 /**
  * @author epolyakov
  */
-public class DecompiledSwfFile extends VirtualFile {
+public class DecompiledActionScriptFile extends VirtualFile {
 
     private static final ResourceBundle resources = ResourceBundle.getBundle("com.epolyakov.ffdec4idea.resources.ffdec4idea");
 
@@ -31,7 +30,7 @@ public class DecompiledSwfFile extends VirtualFile {
      * @param handler
      * @param swfFile
      */
-    public DecompiledSwfFile(@NotNull SwfHandler handler, @NotNull VirtualFile swfFile) {
+    public DecompiledActionScriptFile(@NotNull SwfHandler handler, @NotNull VirtualFile swfFile) {
         this.handler = handler;
         this.parent = swfFile;
         this.name = swfFile.getName();
@@ -45,7 +44,8 @@ public class DecompiledSwfFile extends VirtualFile {
      * @param name
      * @param parent
      */
-    public DecompiledSwfFile(@NotNull SwfHandler handler, @NotNull String name, @NotNull DecompiledSwfFile parent) {
+    public DecompiledActionScriptFile(@NotNull SwfHandler handler, @NotNull String name,
+                                      @NotNull DecompiledActionScriptFile parent) {
         this.handler = handler;
         this.name = name;
         this.parent = parent;
@@ -55,7 +55,7 @@ public class DecompiledSwfFile extends VirtualFile {
     @NotNull
     @Override
     public FileType getFileType() {
-        return ActionScriptFileType.INSTANCE;
+        return DecompiledActionScriptFileType.INSTANCE;
     }
 
     @NotNull
@@ -67,7 +67,7 @@ public class DecompiledSwfFile extends VirtualFile {
     @NotNull
     @Override
     public VirtualFileSystem getFileSystem() {
-        return DecompiledSwfFileSystem.getInstance();
+        return SwfFileSystem.getInstance();
     }
 
     @NotNull
@@ -77,8 +77,8 @@ public class DecompiledSwfFile extends VirtualFile {
             return parent.getPath();
         }
         String path = parent.getPath();
-        if (((DecompiledSwfFile) parent).isRoot()) {
-            return path + DecompiledSwfFileSystem.PATH_SEPARATOR + name;
+        if (((DecompiledActionScriptFile) parent).isRoot()) {
+            return path + SwfFileSystem.PATH_SEPARATOR + name;
         }
         return path + '/' + name;
     }
@@ -90,7 +90,7 @@ public class DecompiledSwfFile extends VirtualFile {
         }
         StringBuilder qName = new StringBuilder(name);
         VirtualFile p = parent;
-        while (!((DecompiledSwfFile) p).isRoot()) {
+        while (!((DecompiledActionScriptFile) p).isRoot()) {
             qName.insert(0, '.');
             qName.insert(0, p.getName());
             p = p.getParent();
@@ -127,7 +127,7 @@ public class DecompiledSwfFile extends VirtualFile {
         String[] names = getChildrenNames();
         VirtualFile[] files = new VirtualFile[names.length];
         for (int i = 0; i < names.length; i++) {
-            files[i] = DecompiledSwfFileSystem.getInstance().getDecompiledFile(handler, names[i], this);
+            files[i] = SwfFileSystem.getInstance().getDecompiledFile(handler, names[i], this);
         }
         return files;
     }

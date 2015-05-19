@@ -92,7 +92,7 @@ public class SwfHandler {
             return new byte[0];
         }
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-             DecompiledSwfTextWriter writer = new DecompiledSwfTextWriter(Configuration.getCodeFormatting(), outputStream)) {
+             SwfTextWriter writer = new SwfTextWriter(Configuration.getCodeFormatting(), outputStream)) {
 
             // Magic code that writes the decompiled AS file to the stream.
             scriptPack.toSource(writer,

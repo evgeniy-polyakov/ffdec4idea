@@ -25,8 +25,17 @@
     <resource-bundle>com.epolyakov.ffdec4idea.resources.ffdec4idea</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <virtualFileSystem key="swf" id="swf" implementationClass="com.epolyakov.ffdec4idea.vfs.DecompiledSwfFileSystem"/>
+        <virtualFileSystem key="swf" id="swf"
+                           implementationClass="com.epolyakov.ffdec4idea.vfs.SwfFileSystem"/>
+        <lang.parserDefinition language="Decompiled ActionScript" implementationClass="com.epolyakov.ffdec4idea.lang.DecompiledActionScriptParserDefinition"/>
     </extensions>
+
+    <!--<extensions defaultExtensionNs="JavaScript">-->
+        <!--<resolveHelper implementation="com.epolyakov.ffdec4idea.resolve.DecompiledSwfResolveHelper"/>-->
+        <!--<dialectSpecificHandlersFactory-->
+        <!--<elementScopeProvider language="ECMA Script Level 4"-->
+                              <!--implementationClass="com.epolyakov.ffdec4idea.resolve.DecompiledSwfResolveScopeProvider"/>-->
+    <!--</extensions>-->
 
     <application-components>
         <!-- Add your application components here -->

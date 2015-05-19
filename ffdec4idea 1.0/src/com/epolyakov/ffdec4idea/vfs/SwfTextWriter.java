@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  *
  * @author epolyakov
  */
-public class DecompiledSwfTextWriter extends GraphTextWriter implements AutoCloseable {
+public class SwfTextWriter extends GraphTextWriter implements AutoCloseable {
 
     private final Writer writer;
 
@@ -26,7 +26,7 @@ public class DecompiledSwfTextWriter extends GraphTextWriter implements AutoClos
 
     private int writtenBytes;
 
-    public DecompiledSwfTextWriter(CodeFormatting formatting, OutputStream outputStream) {
+    public SwfTextWriter(CodeFormatting formatting, OutputStream outputStream) {
         super(formatting);
         this.writer = new BufferedWriter(new Utf8OutputStreamWriter(outputStream));
     }
